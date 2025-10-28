@@ -27,6 +27,12 @@
                 <p class="text-3xl font-bold">{{ $activeUsers }}</p>
             </div>
         </div>
+        <div class="mb-8 text-center">
+        <a href="{{ route('admin.studentIds') }}"
+        class="inline-block bg-purple-600 hover:bg-purple-500 text-white font-semibold px-6 py-3 rounded-xl shadow transition-all">
+        🎓 Diákigazolványok ellenőrzése
+        </a>
+    </div>
 
         <!-- Felhasználók kezelése -->
         <h2 class="text-2xl font-bold mb-4">Felhasználók</h2>
@@ -34,18 +40,26 @@
             <table class="w-full text-left bg-gray-850 rounded-2xl shadow overflow-hidden">
                 <thead class="bg-gray-800 text-gray-300">
                     <tr>
-                        <th class="px-4 py-2">Név</th>
+                        <th class="px-4 py-2">Azonosító</th>
+                        <th class="px-4 py-2">Vezetéknév</th>
+                        <th class="px-4 py-2">Keresztnév</th>
                         <th class="px-4 py-2">Email</th>
+                        <th class="px-4 py-2">Iskola típusa</th>
                         <th class="px-4 py-2">Bérlet alkalmak</th>
                         <th class="px-4 py-2">Diákigazolvány</th>
+                        <th class="px-4 py-2">Ellenőrzés</th>
                         <th class="px-4 py-2">Műveletek</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($users as $user)
                     <tr class="border-t border-gray-700">
-                        <td class="px-4 py-2">{{ $user->name }}</td>
+                        <td class="px-4 py-2">{{ $user->id }}</td>
+                        <td class="px-4 py-2">{{ $user->last_name }}</td>
+                        <td class="px-4 py-2">{{ $user->first_name }}</td>
+                        <td class="px-4 py-2">{{ $user->last_name }}</td>
                         <td class="px-4 py-2">{{ $user->email }}</td>
+                        <td class="px-4 py-2">{{ $user->student_type }}</td>
                         <td class="px-4 py-2">
                             @if($user->gymPasses->first())
                                 {{ $user->gymPasses->first()->remaining_uses }}/12
@@ -53,12 +67,26 @@
                                 Nincs
                             @endif
                         </td>
-                        <td class="px-4 py-2">{{ $user->student_id_verified ? 'Ellenőrizve' : 'Nem ellenőrizve' }}</td>
+                        <td class="px-4 py-2">
+                            @if(!$user->student_card_front || !$user->student_card_back)
+                                <span class="text-gray-400">Nincs feltöltve</span>
+                            @elseif($user->student_id_verified)
+                                <span class="text-green-400 font-semibold">
+                                    Elfogadva ({{ \Carbon\Carbon::parse($user->student_id_expiry)->format('Y.m.d') }})
+                                </span>
+                            @else
+                                <button onclick="openModal('{{ $user->id }}')"
+                                    class="bg-indigo-600 px-3 py-1 rounded hover:bg-indigo-500 text-white">
+                                    Ellenőrzés
+                                </button>
+                            @endif
+                        </td>
                         <td class="px-4 py-2 space-x-2">
                             @if($user->gymPasses->first())
                             <form method="POST" action="{{ route('admin.updatePass', $user) }}" class="inline">
                                 @csrf
-                                <input type="number" name="remaining_uses" min="0" max="12" value="{{ $user->gymPasses->first()->remaining_uses }}" class="w-16 text-black">
+                                <input type="number" name="remaining_uses" min="0" max="12"
+                                    value="{{ $user->gymPasses->first()->remaining_uses }}" class="w-16 text-black">
                                 <button type="submit" class="bg-blue-600 px-2 py-1 rounded hover:bg-blue-500">Frissít</button>
                             </form>
                             @endif
@@ -70,9 +98,50 @@
                         </td>
                     </tr>
                     @endforeach
+                    </tbody>
+            </table>
+        </div>
+        <!-- PARTNEREK -->
+        <h2 class="text-2xl font-bold mb-4 mt-12 text-blue-400">🏋️‍♀️ Partnerek és tulajdonosok</h2>
+        <div class="overflow-x-auto mb-12">
+            <table class="w-full text-left bg-gray-850 rounded-2xl shadow overflow-hidden">
+                <thead class="bg-gray-800 text-gray-300">
+                    <tr>
+                        <th class="px-4 py-2">Konditerem</th>
+                        <th class="px-4 py-2">Város</th>
+                        <th class="px-4 py-2">Cím</th>
+                        <th class="px-4 py-2">Tulajdonos</th>
+                        <th class="px-4 py-2">Művelet</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($gyms as $gym)
+                    <tr class="border-t border-gray-700">
+                        <td class="px-4 py-2 font-semibold">{{ $gym->name }}</td>
+                        <td class="px-4 py-2">{{ $gym->city }}</td>
+                        <td class="px-4 py-2">{{ $gym->address }}</td>
+                        <td class="px-4 py-2">
+                            <form method="POST" action="{{ route('admin.gyms.assignOwner', $gym) }}" class="flex items-center space-x-2">
+                                @csrf
+                                <select name="owner_id" class="bg-gray-900 text-white rounded-lg p-2">
+                                    <option value="">-- Nincs hozzárendelve --</option>
+                                    @foreach($users as $user)
+                                        <option value="{{ $user->id }}" {{ $gym->owner_id == $user->id ? 'selected' : '' }}>
+                                            {{ $user->last_name }} {{ $user->first_name }} ({{ $user->email }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <button type="submit" class="bg-green-600 px-3 py-1 rounded hover:bg-green-500">
+                                    Mentés
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    @endforeach
                 </tbody>
             </table>
         </div>
+
 
         <!-- Új partner hozzáadása -->
         <h2 class="text-2xl font-bold mb-4">Új partner hozzáadása</h2>

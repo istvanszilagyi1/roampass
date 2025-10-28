@@ -25,10 +25,27 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
-
         $request->session()->regenerate();
 
-        return redirect()->intended(route('home', absolute: false));
+        $user = auth()->user();
+
+        // Ha a felhasználó scanner profilhoz tartozik
+        if ($user->scanner) {
+            return redirect()->route('scanner.dashboard');
+        }
+
+        // Ha a felhasználó partner admin és van hozzárendelt gym
+        if ($user->is_admin && $user->gyms()->exists()) {
+            return redirect()->route('partner.dashboard');
+        }
+
+        // Ha admin
+        if ($user->is_admin) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        // Alapértelmezett
+        return redirect()->intended(route('home'));
     }
 
     /**

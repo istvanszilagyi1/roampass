@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Gym;
 use App\Models\GymPass;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class AdminpanelController extends Controller
 {
@@ -18,8 +19,9 @@ class AdminpanelController extends Controller
         $totalRevenue = GymPass::sum('price'); // vagy fix összeg, ha nincs mező
         $activeUsers = User::whereHas('gymPasses')->count();
         $users = User::with('gymPasses')->get(); // összes felhasználó a bérletekkel
+        $gyms = Gym::with('owner')->get();
 
-        return view('admin.dashboard', compact('totalPasses','totalGyms','totalRevenue','activeUsers','users'));
+        return view('admin.dashboard', compact('totalPasses','totalGyms','totalRevenue','activeUsers','users', 'gyms'));
     }
 
     public function users()
@@ -72,4 +74,40 @@ class AdminpanelController extends Controller
         Gym::create($request->all());
         return back()->with('success', 'Új partner hozzáadva!');
     }
+    public function verifyStudent(Request $request, User $user)
+    {
+        $request->validate([
+            'expiry_date' => 'required|date|after:today'
+        ]);
+
+        $user->update([
+            'student_id_verified' => true,
+            'student_id_expiry' => $request->expiry_date
+        ]);
+
+        return redirect()->back()->with('success', '✅ Diákigazolvány elfogadva és lejárat beállítva.');
+    }
+
+    public function studentIds()
+    {
+        // Csak azok a felhasználók, akik feltöltötték mindkét oldalt, de még nincs elfogadva
+        $users = User::where('student_card_front', '!=', null)
+                    ->where('student_card_back', '!=', null)
+                    ->where('student_id_verified', false)
+                    ->get();
+
+        return view('admin.student_ids', compact('users'));
+    }
+
+    public function assignOwner(Request $request, Gym $gym)
+    {
+        $request->validate([
+            'owner_id' => 'nullable|exists:users,id',
+        ]);
+
+        $gym->update(['owner_id' => $request->owner_id]);
+
+        return back()->with('success', '✅ Partner tulajdonos sikeresen frissítve.');
+    }
+
 }

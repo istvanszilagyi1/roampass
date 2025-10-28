@@ -6,6 +6,8 @@ use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\GymPassController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AdminpanelController;
+use App\Http\Controllers\PartnerDashboardController;
+use App\Http\Controllers\ScannerController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/partners', [PartnerController::class, 'index'])->name('partners.index');
@@ -23,6 +25,15 @@ Route::middleware(['auth'])->group(function () {
     // Profil
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/update-password', [ProfileController::class, 'updatePassword'])->name('profile.updatePassword');
+    Route::get('/partner/dashboard', [PartnerDashboardController::class, 'index'])->name('partner.dashboard');
+    Route::get('/scanner', [ScannerController::class, 'index'])->name('scanner.index');
+
+    // QR scan POST
+    Route::post('/scanner/scan', [ScannerController::class, 'scanUser'])->name('scanner.scan');
+    Route::post('/partner/scanner/store', [PartnerDashboardController::class, 'storeScanner'])->name('partner.scanner.store');
+    Route::delete('/partner/scanner/{scanner}', [PartnerDashboardController::class, 'destroyScanner'])->name('partner.scanner.destroy');
+
 });
 
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function() {
@@ -32,6 +43,14 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function() {
     Route::post('/gym/store', [AdminpanelController::class, 'storeGym'])->name('admin.storeGym');
     Route::post('/user/{user}/update-pass', [AdminpanelController::class, 'updatePass'])->name('admin.updatePass');
     Route::delete('/user/{user}', [AdminpanelController::class, 'deleteUser'])->name('admin.deleteUser');
+    Route::get('/student-ids', [AdminpanelController::class, 'studentIds'])->name('admin.studentIds');
+    Route::post('/user/{user}/verify-student', [AdminpanelController::class, 'verifyStudent'])->name('admin.verifyStudent');
+    Route::post('/admin/gyms/{gym}/assign-owner', [AdminPanelController::class, 'assignOwner'])->name('admin.gyms.assignOwner');
+});
+
+Route::middleware(['auth', 'scanner'])->group(function () {
+    Route::get('/scanner/dashboard', [ScannerController::class, 'index'])
+        ->name('scanner.dashboard');
 });
 
 require __DIR__.'/auth.php';

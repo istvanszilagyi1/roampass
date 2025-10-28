@@ -11,20 +11,30 @@ class GymPassController extends Controller
     // Saját bérletek
     public function index()
     {
-        $passes = Auth::user()->gymPasses()->get(); // már nincs gym kapcsolat
+        $passes = Auth::user()->gymPasses()->get();
+        $user = Auth::user();
+        if (!$user->hasValidStudentCard()) {
+            return redirect()->route('profile.edit')
+                ->with('error', '⚠️ A diákigazolványod lejárt vagy még nincs elfogadva. Kérjük, töltsd fel újra!');
+        }
         return view('passes.index', compact('passes'));
     }
 
-    // Bérlet vásárlás form
     public function create()
     {
-        return view('passes.create'); // nincs gym selector
+        return view('passes.create');
     }
 
     // Bérlet vásárlás feldolgozása
     public function store(Request $request)
     {
         $user = Auth::user();
+
+
+        if (!$user->hasValidStudentCard()) {
+            return redirect()->route('profile.edit')
+                ->with('error', '❌ Csak érvényes és elfogadott diákigazolvánnyal vásárolhatsz bérletet.');
+        }
 
         // Ellenőrizzük, hogy van-e aktív bérlete
         $activePass = GymPass::where('user_id', $user->id)
@@ -35,6 +45,11 @@ class GymPassController extends Controller
             return redirect()->route('passes.index')
                              ->with('error', 'Már van aktív bérleted, amíg el nem fogy a 12 alkalom, nem vásárolhatsz újat.');
         }
+
+        if (!$user->student_id_verified || !$user->student_id_expiry || $user->student_id_expiry->isPast()) {
+            return back()->with('error', 'Csak érvényes és elfogadott diákigazolvánnyal vásárolhatsz bérletet.');
+        }
+
 
         // Ha nincs aktív bérlet, létrehozzuk az újat
         GymPass::create([

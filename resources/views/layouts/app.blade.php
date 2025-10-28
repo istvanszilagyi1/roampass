@@ -23,7 +23,7 @@
 <body class="bg-gray-950 text-gray-100 font-sans relative overflow-x-hidden duration-700 ease-in-out">
 
     <!-- 🔄 LOADER -->
-    <div id="loader" class="fixed inset-0 bg-[rgba(10,10,15,0.95)] flex items-center justify-center z-[9999] transition-opacity duration-[1500ms] opacity-100">
+    <div id="loader" class="fixed inset-0 bg-[rgba(10,10,15,0.95)] flex items-center justify-center z-[9999] transition-opacity duration-[1000ms] opacity-100">
         <img src="{{ asset('images/logo.png') }}" alt="RoamPass Logo" class="w-32 h-32 animate-pulse">
     </div>
 
@@ -39,7 +39,7 @@
         // Teljes eltűnés 2,5s-nál (1s várakozás + 1,5s fade)
         setTimeout(() => {
             loader.style.display = 'none';
-        }, 2500);
+        }, 1500);
     });
     </script>
 
@@ -70,6 +70,13 @@
                 @if(Auth::user() && Auth::user()->is_admin)
                     <a href="{{ route('admin.dashboard') }}" class="nav-link">Admin Panel</a>
                 @endif
+                @auth
+                    @if(Auth::user()?->scannerProfile)
+                        <a href="{{ route('scanner.dashboard') }}" class="nav-link">
+                            Scanner Dashboard
+                        </a>
+                    @endif
+                @endauth
                 <a href="{{ route('home') }}" class="nav-link">Főoldal</a>
                 <a href="{{ route('partners.index') }}" class="nav-link">Partnereink</a>
 
@@ -77,6 +84,15 @@
                     <a href="{{ route('passes.index') }}" class="nav-link">Saját bérleteim</a>
                     <a href="{{ route('passes.create') }}" class="nav-link">Bérlet vásárlás</a>
                     <a href="{{ route('profile.edit') }}" class="nav-link">Profilom</a>
+
+                    @php
+                        // Ellenőrizzük, hogy van-e hozzárendelt gym
+                        $ownedGym = \App\Models\Gym::where('owner_id', Auth::id())->first();
+                    @endphp
+
+                    @if($ownedGym)
+                        <a href="{{ route('partner.dashboard') }}" class="nav-link">Partner Dashboard</a>
+                    @endif
 
                     <form method="POST" action="{{ route('logout') }}" class="inline">
                         @csrf
@@ -86,6 +102,7 @@
                     <a href="{{ route('login') }}" class="nav-btn-primary">Bejelentkezés</a>
                     <a href="{{ route('register') }}" class="nav-btn-secondary">Regisztráció</a>
                 @endauth
+
             </nav>
         </div>
     </header>
