@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="images/logo.png" width="300" alt="RoamPass Logó">
+    <img src="{{ asset('images/logo.png') }}" width="300" alt="RoamPass Logó">
 </p>
 
 <h1 align="center">✨ RoamPass - Konditerem Beléptető Rendszer</h1>
