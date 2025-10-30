@@ -58,15 +58,18 @@
     <!-- 🌈 NAVBAR -->
     <header class="fixed top-0 left-0 w-full z-50 transition-all duration-500 bg-transparent backdrop-blur-xl">
         <div class="container mx-auto flex justify-between items-center h-16 px-6">
-
-            <!-- 🏷 LOGO -->
             <a href="{{ route('home') }}" class="flex items-center space-x-2 group">
                 <img src="{{ asset('images/logo.png') }}" alt="Roam Logo" class="h-10 w-auto transition-transform group-hover:scale-105">
                 <span class="text-xl font-bold text-white tracking-tight group-hover:text-indigo-400 transition-colors">RoamPass</span>
             </a>
 
+            <!-- Hamburger (mobil) -->
+            <button id="menu-btn" class="lg:hidden text-white text-3xl focus:outline-none">
+                ☰
+            </button>
+
             <!-- 🧭 NAVIGÁCIÓ -->
-            <nav class="flex items-center space-x-4">
+            <nav id="nav-menu" class="flex items-center space-x-4">
                 @if(Auth::user() && Auth::user()->is_admin)
                     <a href="{{ route('admin.dashboard') }}" class="nav-link">Admin Panel</a>
                 @endif
@@ -104,6 +107,14 @@
                 @endauth
 
             </nav>
+        </div>
+        <div id="mobile-menu" class="hidden flex-col items-center bg-gray-900/95 backdrop-blur-lg shadow-lg py-4 space-y-3 text-center lg:hidden">
+            <a href="{{ route('home') }}" class="nav-link">Főoldal</a>
+            <a href="{{ route('partners.index') }}" class="nav-link">Partnereink</a>
+            @guest
+                <a href="{{ route('login') }}" class="nav-btn-primary w-4/5">Bejelentkezés</a>
+                <a href="{{ route('register') }}" class="nav-btn-secondary w-4/5">Regisztráció</a>
+            @endguest
         </div>
     </header>
 

@@ -35,23 +35,38 @@
     </section>
 
     <!-- Miért a RoamPass? -->
-    <section class="grid md:grid-cols-3 gap-8 text-center mb-24 max-w-6xl mx-auto px-6">
-        <div class="p-8 bg-gray-850 text-white rounded-2xl shadow-lg hover:shadow-blue-900/40 transition-all duration-500 hover:-translate-y-2 hover:scale-105 animate-subtle-float">
-            <img src="{{ asset('images/icon-flexibility.png') }}" alt="" class="mx-auto w-16 mb-4">
-            <h3 class="text-xl font-bold mb-2 text-blue-400">Teljes rugalmasság</h3>
-            <p class="text-gray-400">Sportolj ott, ahol éppen vagy. Nem köt meg egyetlen terem sem.</p>
-        </div>
-        <div class="p-8 bg-gray-850 text-white rounded-2xl shadow-lg hover:shadow-blue-900/40 transition-all duration-500 hover:-translate-y-2 hover:scale-105 animate-subtle-float-delay">
-            <img src="{{ asset('images/icon-wallet.png') }}" alt="" class="mx-auto w-16 mb-4">
-            <h3 class="text-xl font-bold mb-2 text-blue-400">Digitális bérlet</h3>
-            <p class="text-gray-400">Online vásárlás, digitális belépés, automatikus hosszabbítás.</p>
-        </div>
-        <div class="p-8 bg-gray-850 text-white rounded-2xl shadow-lg hover:shadow-blue-900/40 transition-all duration-500 hover:-translate-y-2 hover:scale-105 animate-subtle-float">
-            <img src="{{ asset('images/icon-network.png') }}" alt="" class="mx-auto w-16 mb-4">
-            <h3 class="text-xl font-bold mb-2 text-blue-400">Országos hálózat</h3>
-            <p class="text-gray-400">Több tucat városban elérhető RoamPass-partner konditermek.</p>
+    <section class="grid md:grid-cols-3 gap-10 text-center mb-24 max-w-6xl mx-auto px-6">
+        @foreach([
+            ['icon' => 'icon-flexibility.png', 'title' => 'Teljes rugalmasság', 'desc' => 'Sportolj ott, ahol éppen vagy. Nem köt meg egyetlen terem sem.'],
+            ['icon' => 'icon-wallet.png', 'title' => 'Digitális bérlet', 'desc' => 'Online vásárlás, digitális belépés, automatikus hosszabbítás.'],
+            ['icon' => 'icon-network.png', 'title' => 'Országos hálózat', 'desc' => 'Több tucat városban elérhető RoamPass-partner konditermek.'],
+        ] as $item)
+            <div class="group relative bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl p-10 shadow-xl border border-gray-700 hover:border-blue-600 hover:shadow-blue-600/30 transform hover:-translate-y-3 transition-all duration-500">
+                <div class="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition duration-500 rounded-3xl blur-lg"></div>
+                <img src="{{ asset('images/' . $item['icon']) }}" alt="" class="mx-auto w-20 mb-5">
+                <h3 class="text-2xl font-bold text-blue-400 mb-3">{{ $item['title'] }}</h3>
+                <p class="text-gray-300">{{ $item['desc'] }}</p>
+            </div>
+        @endforeach
+    </section>
+
+    <section class="max-w-5xl mx-auto px-6 mb-24">
+        <h2 class="text-3xl font-bold text-center mb-12 text-blue-400">Hogyan működik?</h2>
+        <div class="flex flex-col md:flex-row md:space-x-8 space-y-8 md:space-y-0">
+            @foreach([
+                ['step' => '1️⃣', 'title' => 'Regisztrálj', 'desc' => 'Hozz létre egy fiókot mindössze 1 perc alatt.'],
+                ['step' => '2️⃣', 'title' => 'Válassz bérletet', 'desc' => 'Vásárolj digitálisan, gyorsan és biztonságosan.'],
+                ['step' => '3️⃣', 'title' => 'Lépj be a termekbe', 'desc' => 'Mutasd fel a QR-kódot és edzhetsz is!'],
+            ] as $step)
+            <div class="flex-1 bg-gray-850 p-8 rounded-2xl text-center border border-gray-700 hover:border-blue-500 hover:scale-105 transition-all duration-500">
+                <div class="text-5xl mb-3">{{ $step['step'] }}</div>
+                <h3 class="text-xl font-bold mb-2 text-blue-400">{{ $step['title'] }}</h3>
+                <p class="text-gray-400">{{ $step['desc'] }}</p>
+            </div>
+            @endforeach
         </div>
     </section>
+
 
     <!-- CTA -->
 <!-- CTA / Információs szekció -->
@@ -108,6 +123,32 @@
             </div>
         </div>
     </section>
+
+    <section class="max-w-4xl mx-auto text-center py-20 px-6 mb-24 bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl border border-gray-700 shadow-lg">
+        <h2 class="text-3xl font-bold mb-6 text-blue-400">Lépj kapcsolatba velünk</h2>
+        <p class="text-gray-400 mb-8 max-w-2xl mx-auto">Van kérdésed vagy partner lennél? Küldj üzenetet, és hamarosan válaszolunk!</p>
+
+        <form action="mailto:partners@roampass.hu" method="post" enctype="text/plain" class="grid md:grid-cols-2 gap-6 text-left">
+            <div>
+                <label class="block text-sm text-gray-300 mb-2">Név</label>
+                <input type="text" name="name" class="w-full bg-gray-800 text-white p-3 rounded-lg border border-gray-700 focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-300 mb-2">Email</label>
+                <input type="email" name="email" class="w-full bg-gray-800 text-white p-3 rounded-lg border border-gray-700 focus:border-blue-500">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm text-gray-300 mb-2">Üzenet</label>
+                <textarea name="message" rows="4" class="w-full bg-gray-800 text-white p-3 rounded-lg border border-gray-700 focus:border-blue-500"></textarea>
+            </div>
+            <div class="md:col-span-2 text-center">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-lg font-semibold shadow hover:scale-105 transition-all duration-300">
+                    Üzenet küldése
+                </button>
+            </div>
+        </form>
+    </section>
+
 
 </div>
 

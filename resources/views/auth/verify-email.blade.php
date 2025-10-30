@@ -1,31 +1,38 @@
 <x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
-    </div>
+    <div class="min-h-screen flex items-center justify-center bg-gray-950 text-white px-6">
+        <div class="bg-gray-900/60 backdrop-blur-md p-8 rounded-2xl shadow-xl w-full max-w-xl text-center">
 
-    @if (session('status') == 'verification-link-sent')
-        <div class="mb-4 font-medium text-sm text-green-600 dark:text-green-400">
-            {{ __('A new verification link has been sent to the email address you provided during registration.') }}
-        </div>
-    @endif
+            <img src="{{ asset('images/logo.png') }}" alt="RoamPass" class="mx-auto h-16 mb-4">
+            <h1 class="text-3xl font-bold text-blue-400 mb-2">E-mail megerősítése</h1>
 
-    <div class="mt-4 flex items-center justify-between">
-        <form method="POST" action="{{ route('verification.send') }}">
-            @csrf
+            <p class="text-gray-400 text-sm mb-6">
+                Köszönjük a regisztrációt!
+                Kérjük, erősítsd meg az e-mail címed a kiküldött levélben található linkre kattintva.
+                Ha nem kaptál e-mailt, újra is küldhetjük.
+            </p>
 
-            <div>
-                <x-primary-button>
-                    {{ __('Resend Verification Email') }}
-                </x-primary-button>
+            @if (session('status') == 'verification-link-sent')
+                <div class="mb-6 font-medium text-sm text-green-500">
+                    Új megerősítő e-mailt küldtünk a megadott címre.
+                </div>
+            @endif
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
+                <form method="POST" action="{{ route('verification.send') }}">
+                    @csrf
+                    <x-primary-button class="w-full sm:w-auto">
+                        {{ __('Megerősítő e-mail újraküldése') }}
+                    </x-primary-button>
+                </form>
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit"
+                        class="underline text-sm text-gray-400 hover:text-gray-200">
+                        {{ __('Kijelentkezés') }}
+                    </button>
+                </form>
             </div>
-        </form>
-
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-
-            <button type="submit" class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
-                {{ __('Log Out') }}
-            </button>
-        </form>
+        </div>
     </div>
 </x-guest-layout>
