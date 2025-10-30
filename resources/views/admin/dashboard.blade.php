@@ -23,8 +23,8 @@
                 <p class="text-3xl font-bold">{{ number_format($totalRevenue, 0, ',', ' ') }} Ft</p>
             </div>
             <div class="bg-gray-850 rounded-2xl p-6 shadow text-center">
-                <p class="text-gray-400">Aktív felhasználók</p>
-                <p class="text-3xl font-bold">{{ $activeUsers }}</p>
+                <p class="text-gray-400">Új regisztrációk (utolsó 30 nap)</p>
+                <p class="text-3xl font-bold">{{ $newUsersLast30Days }}</p>
             </div>
         </div>
         <div class="mb-8 text-center">
@@ -57,7 +57,6 @@
                         <td class="px-4 py-2">{{ $user->id }}</td>
                         <td class="px-4 py-2">{{ $user->last_name }}</td>
                         <td class="px-4 py-2">{{ $user->first_name }}</td>
-                        <td class="px-4 py-2">{{ $user->last_name }}</td>
                         <td class="px-4 py-2">{{ $user->email }}</td>
                         <td class="px-4 py-2">{{ $user->student_type }}</td>
                         <td class="px-4 py-2">

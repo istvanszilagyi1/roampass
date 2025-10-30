@@ -17,45 +17,59 @@ class PartnerDashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Ha nincs gym hozzárendelve
+        // Partner gym
         $gym = Gym::where('owner_id', $user->id)->first();
         if (!$gym) {
             return view('partner.no-gym');
         }
 
-        // Statisztikák
+        // Összes beolvasás
         $totalScans = Scan::where('gym_id', $gym->id)->count();
+
+        // Havi bevétel
         $monthlyRevenue = Scan::where('gym_id', $gym->id)
             ->whereMonth('scanned_at', Carbon::now()->month)
             ->sum('revenue_amount');
-        $uniqueUsers = Scan::where('gym_id', $gym->id)
-            ->distinct('user_id')
-            ->count('user_id');
-        $dailyScans = Scan::select(
-                DB::raw('DATE(scanned_at) as date'),
-                DB::raw('COUNT(*) as total')
-            )
-            ->where('gym_id', $gym->id)
-            ->whereBetween('scanned_at', [Carbon::now()->subDays(30), Carbon::now()])
-            ->groupBy('date')
-            ->orderBy('date', 'ASC')
-            ->get();
 
-        // Scanner profilok lekérése
+        // Legutolsó beolvasás
+        $lastScan = Scan::where('gym_id', $gym->id)->latest('scanned_at')->first();
+
+        // Napi beolvasások az elmúlt 30 napban
+        $dailyScansRaw = Scan::select(
+        DB::raw('DATE(scanned_at) as date'),
+        DB::raw('COUNT(*) as total')
+        )
+        ->where('gym_id', $gym->id)
+        ->whereBetween('scanned_at', [Carbon::now()->subDays(29)->startOfDay(), Carbon::now()->endOfDay()])
+        ->groupBy('date')
+        ->orderBy('date', 'ASC')
+        ->get();
+
+        // 30 nap előállítása 0 értékekkel
+        $dailyScans = collect();
+        for ($i = 29; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i)->format('Y-m-d');
+            $scan = $dailyScansRaw->firstWhere('date', $date);
+            $dailyScans->push([
+                'date' => $date,
+                'total' => $scan ? (int)$scan->total : 0
+            ]);
+        }
+
+
+        // Scanner profilok
         $scanners = Scanner::where('gym_id', $gym->id)->get();
 
         $stats = [
             'total_scans' => $totalScans,
             'monthly_revenue' => $monthlyRevenue,
-            'unique_users' => $uniqueUsers,
         ];
 
-        return view('partner.dashboard', compact('gym', 'stats', 'dailyScans', 'scanners'));
+        return view('partner.dashboard', compact('gym', 'stats', 'dailyScans', 'scanners', 'lastScan'));
     }
 
     public function storeScanner(Request $request)
     {
-        // --- Validáció
         $request->validate([
             'scanner_name' => 'required|string|max:255',
             'first_name' => 'required|string|max:255',
@@ -65,25 +79,20 @@ class PartnerDashboardController extends Controller
         ]);
 
         $partner = auth()->user();
-
-        // --- Lekérjük a partner gym-jét
         $gym = Gym::where('owner_id', $partner->id)->firstOrFail();
 
-        // --- Létrehozzuk a Scanner felhasználót
         $scannerUser = User::create([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'is_admin' => false,
-            'student_type' => null, // nincs relevanciája scannernek
         ]);
 
-        // --- Létrehozzuk a Scanner profilt, összekapcsolva a felhasználóval és a gym-mel
         Scanner::create([
             'gym_id' => $gym->id,
             'name' => $request->scanner_name,
-            'user_id' => $scannerUser->id, // scanner user
+            'user_id' => $scannerUser->id,
         ]);
 
         return back()->with('success', 'Új scanner profil létrehozva!');
@@ -93,18 +102,14 @@ class PartnerDashboardController extends Controller
     {
         $partner = auth()->user();
 
-        // --- Ellenőrizzük, hogy a partner tényleg a gym tulajdonosa
         if ($scanner->gym->owner_id !== $partner->id) {
             abort(403, 'Nincs jogosultságod a scanner törléséhez.');
         }
 
-        // --- Töröljük a scannerhez tartozó felhasználót is
-        $scannerUser = $scanner->user;
-        if ($scannerUser) {
-            $scannerUser->delete();
+        if ($scanner->user) {
+            $scanner->user->delete();
         }
 
-        // --- Töröljük magát a scanner profilt
         $scanner->delete();
 
         return back()->with('success', 'Scanner profil és a hozzá tartozó felhasználó törölve.');

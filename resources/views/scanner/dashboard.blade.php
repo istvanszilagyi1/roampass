@@ -15,94 +15,148 @@
         </div>
 
         <!-- Felhasználó adatai -->
-        <div id="user-info" class="hidden bg-gray-850 p-6 rounded-2xl shadow space-y-3">
+        <div id="user-info"
+             class="hidden bg-gray-850 p-6 rounded-2xl shadow space-y-3 transition-all duration-700 border border-transparent">
             <h2 class="text-xl font-semibold text-indigo-400">Felhasználó adatai</h2>
             <p><strong>Név:</strong> <span id="user-name"></span></p>
-            <p><strong>Diákigazolvány:</strong> <span id="user-student"></span></p>
+            <p><strong>Diákigazolvány státusz:</strong> <span id="user-student"></span></p>
             <p><strong>Alkalmak száma:</strong> <span id="user-uses"></span></p>
 
-            <button id="deduct-use" class="bg-red-600 px-4 py-2 rounded hover:bg-red-500 transition-all">
+            <div id="student-card-images" class="flex gap-4 mt-4 flex-wrap"></div>
+
+            <button id="deduct-use"
+                    class="bg-red-600 px-4 py-2 rounded hover:bg-red-500 transition-all">
                 Alkalom levonása
             </button>
         </div>
 
-        <!-- Statisztika grafikon -->
-        <div class="mt-12">
-            <h2 class="text-xl font-semibold text-indigo-400 mb-4">Utolsó 30 nap beolvasásai</h2>
-            <canvas id="scansChart"></canvas>
-        </div>
     </div>
 </section>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-    // POST request a szervernek
+const qrCodeSuccessCallback = (decodedText) => {
+    updateUserUI(decodedText);
+};
+
+// Fő függvény: QR beolvasás és UI frissítés
+function updateUserUI(qrText, deduct = false) {
     fetch("{{ route('scanner.scan') }}", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "X-CSRF-TOKEN": "{{ csrf_token() }}"
         },
-        body: JSON.stringify({ qr_code: decodedText })
+        body: JSON.stringify({ qr_code: qrText, deduct: deduct })
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) throw new Error("HTTP error " + res.status);
+        return res.json();
+    })
     .then(data => {
-        if(data.success) {
-            document.getElementById('user-info').classList.remove('hidden');
-            document.getElementById('user-name').textContent = data.user.first_name + ' ' + data.user.last_name;
-            document.getElementById('user-student').textContent = data.user.student_id_verified ? 'Elfogadva' : 'Nincs';
-            document.getElementById('user-uses').textContent = data.user.remaining_uses;
+        console.log("Backend válasz:", data);
 
-            // Alkalom levonás
-            document.getElementById('deduct-use').onclick = () => {
-                fetch("{{ route('scanner.scan') }}", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                    },
-                    body: JSON.stringify({ qr_code: decodedText, deduct: true })
-                }).then(r => r.json()).then(resp => {
-                    if(resp.success){
-                        document.getElementById('user-uses').textContent = resp.user.remaining_uses;
-                        alert('Alkalom levonva!');
-                    }
-                });
-            };
-        } else {
-            alert(data.message);
+        const userInfo = document.getElementById('user-info');
+        const userName = document.getElementById('user-name');
+        const userStudent = document.getElementById('user-student');
+        const userUses = document.getElementById('user-uses');
+        const studentCardContainer = document.getElementById('student-card-images');
+        const deductBtn = document.getElementById('deduct-use');
+
+        // --- Alaphelyzet ---
+        userInfo.classList.remove('border-green-500', 'border-red-500', 'bg-green-900/30', 'bg-red-900/30');
+        userInfo.style.borderWidth = '0px';
+        studentCardContainer.innerHTML = '';
+        deductBtn.style.display = 'none';
+
+        if (!data.user) {
+            userInfo.classList.add('border-red-500', 'bg-red-900/30');
+            userInfo.style.borderWidth = '2px';
+            userInfo.classList.remove('hidden');
+            userName.textContent = data.message || 'Felhasználó nem található.';
+            userStudent.textContent = '❌ Hiba';
+            userUses.textContent = 'N/A';
+            alert(data.message || 'Ismeretlen hiba.');
+            return;
         }
-    });
-};
 
-// QR olvasó inicializálása
+        // ✅ Felhasználói adatok frissítése
+        const user = data.user;
+        userInfo.classList.remove('hidden');
+        userName.textContent = `${user.first_name} ${user.last_name}`;
+        userStudent.textContent = user.student_id_verified ? '✅ Elfogadva' : '❌ Nincs elfogadva';
+        userStudent.style.color = user.student_id_verified ? 'lightgreen' : 'red';
+        userUses.textContent = user.remaining_uses;
+
+        // Diákigazolvány képek
+        if (user.student_card_front) {
+            const frontImg = document.createElement('img');
+            frontImg.src = user.student_card_front;
+            frontImg.alt = "Diákigazolvány eleje";
+            frontImg.className = "w-40 h-24 object-cover rounded-lg border border-gray-700";
+            studentCardContainer.appendChild(frontImg);
+        }
+        if (user.student_card_back) {
+            const backImg = document.createElement('img');
+            backImg.src = user.student_card_back;
+            backImg.alt = "Diákigazolvány hátulja";
+            backImg.className = "w-40 h-24 object-cover rounded-lg border border-gray-700";
+            studentCardContainer.appendChild(backImg);
+        }
+
+        // --- Állapot logika ---
+        switch (data.status) {
+            case 'deducted':
+                // ✅ Sikeres levonás: zöld keret és eltűnik a gomb
+                userInfo.classList.add('border-green-500', 'bg-green-900/30');
+                userInfo.style.borderWidth = '2px';
+                deductBtn.style.display = 'none';
+
+                // 2 másodperc után eltűnik a zöld jelzés
+                setTimeout(() => {
+                    userInfo.classList.remove('border-green-500', 'bg-green-900/30');
+                    userInfo.style.borderWidth = '0px';
+                }, 2000);
+                break;
+
+            case 'no_uses':
+                // ❌ Nincs több alkalom → piros jelzés
+                userInfo.classList.add('border-red-500', 'bg-red-900/30');
+                userInfo.style.borderWidth = '2px';
+                deductBtn.style.display = 'none';
+                break;
+
+            case 'scanned':
+            case 'deducted': // frissített adatoknál is gomb aktiválás
+                // ℹ️ Csak beolvasás → gomb aktív
+                deductBtn.style.display = 'inline-block';
+                deductBtn.disabled = false;
+                deductBtn.textContent = 'Alkalom levonása';
+
+                // Esemény beállítása
+                deductBtn.onclick = () => {
+                    deductBtn.disabled = true;
+                    deductBtn.textContent = 'Levonás...';
+                    updateUserUI(qrText, true); // levonás
+                };
+                break;
+
+            default:
+                console.warn("Ismeretlen státusz:", data.status);
+        }
+
+    })
+    .catch(err => {
+        console.error("Hiba:", err);
+        alert('A kapcsolat a szerverrel megszakadt.');
+    });
+}
+
+// QR scanner inicializálása
 let html5QrcodeScanner = new Html5QrcodeScanner(
     "qr-reader", { fps: 10, qrbox: 250 }
 );
 html5QrcodeScanner.render(qrCodeSuccessCallback);
-
-// Grafikon adatok
-const ctx = document.getElementById('scansChart').getContext('2d');
-const scansChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: {!! $dailyScans->pluck('date') !!},
-        datasets: [{
-            label: 'Beolvasások',
-            data: {!! $dailyScans->pluck('total') !!},
-            borderColor: '#6366f1',
-            backgroundColor: 'rgba(99,102,241,0.3)',
-            fill: true,
-            tension: 0.3
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } }
-    }
-});
 </script>
+
 @endsection

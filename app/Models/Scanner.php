@@ -8,8 +8,8 @@ class Scanner extends Model
 {
     protected $fillable = [
         'gym_id',
+        'user_id',
         'name',
-        'token',
     ];
 
     public function gym()

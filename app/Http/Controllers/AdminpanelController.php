@@ -17,11 +17,11 @@ class AdminpanelController extends Controller
         $totalPasses = GymPass::count();
         $totalGyms = Gym::count();
         $totalRevenue = GymPass::sum('price'); // vagy fix összeg, ha nincs mező
-        $activeUsers = User::whereHas('gymPasses')->count();
+        $newUsersLast30Days = User::where('created_at', '>=', now()->subDays(30))->count();
         $users = User::with('gymPasses')->get(); // összes felhasználó a bérletekkel
         $gyms = Gym::with('owner')->get();
 
-        return view('admin.dashboard', compact('totalPasses','totalGyms','totalRevenue','activeUsers','users', 'gyms'));
+        return view('admin.dashboard', compact('totalPasses','totalGyms','totalRevenue','newUsersLast30Days','users', 'gyms'));
     }
 
     public function users()

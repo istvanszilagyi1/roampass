@@ -27,12 +27,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/update-password', [ProfileController::class, 'updatePassword'])->name('profile.updatePassword');
     Route::get('/partner/dashboard', [PartnerDashboardController::class, 'index'])->name('partner.dashboard');
-    Route::get('/scanner', [ScannerController::class, 'index'])->name('scanner.index');
-
-    // QR scan POST
-    Route::post('/scanner/scan', [ScannerController::class, 'scanUser'])->name('scanner.scan');
+    Route::delete('/partner/scanner/delete', [PartnerDashboardController::class, 'destroyScanner'])->name('partner.scanner.destroy');
     Route::post('/partner/scanner/store', [PartnerDashboardController::class, 'storeScanner'])->name('partner.scanner.store');
-    Route::delete('/partner/scanner/{scanner}', [PartnerDashboardController::class, 'destroyScanner'])->name('partner.scanner.destroy');
 
 });
 
@@ -49,8 +45,14 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function() {
 });
 
 Route::middleware(['auth', 'scanner'])->group(function () {
+
+    // Scanner dashboard
     Route::get('/scanner/dashboard', [ScannerController::class, 'index'])
         ->name('scanner.dashboard');
+
+    // QR kód beolvasás (AJAX hívás)
+    Route::post('/scanner/scan', [ScannerController::class, 'scanUser'])
+        ->name('scanner.scan');
 });
 
 require __DIR__.'/auth.php';

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class GymPass extends Model
 {
-    protected $fillable = ['user_id', 'remaining_uses', 'purchase_date'];
+    protected $fillable = ['user_id', 'remaining_uses', 'purchase_date', 'qr_code_url'];
 
     public function user()
     {

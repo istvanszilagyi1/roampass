@@ -42,8 +42,10 @@
             </div>
 
             <div class="bg-gray-900 p-6 rounded-2xl shadow">
-                <h2 class="text-gray-400 text-sm">Utolsó frissítés</h2>
-                <p class="text-3xl font-bold text-yellow-400 mt-2">{{ now()->format('Y.m.d. H:i') }}</p>
+                <h2 class="text-gray-400 text-sm">Utolsó beolvasás</h2>
+                <p class="text-3xl font-bold text-yellow-400 mt-2">
+                    {{ $lastScan ? \Carbon\Carbon::parse($lastScan->scanned_at)->format('Y.m.d H:i') : 'Nincs adat' }}
+                </p>
             </div>
         </div>
 
@@ -63,6 +65,7 @@
                         <div>
                             <p class="text-lg font-semibold text-indigo-400">{{ $scanner->name }}</p>
 
+                            {{-- 1. Eredeti $scanner->user megjelenítése --}}
                             @if($scanner->user)
                                 <p class="text-gray-300 text-sm">
                                     👤 {{ $scanner->user->first_name }} {{ $scanner->user->last_name }}
@@ -73,7 +76,33 @@
                             <p class="text-gray-500 text-xs mt-1">
                                 Létrehozva: {{ $scanner->created_at->format('Y.m.d. H:i') }}
                             </p>
+
+                            {{-- 2. Keresd meg a felhasználót a $scanner->id alapján --}}
+                            @php
+                                // Ez a sor keresi meg az adatbázisban azt a User-t, akinek az ID-je megegyezik a $scanner->id-val
+                                // Feltételezi, hogy a \App\Models\User vagy \App\User modell használatos
+                                $targetUser = \App\Models\User::find($scanner->user_id);
+                            @endphp
+
+                            @if ($targetUser)
+                                {{-- Ha megtalálta, jelenítsd meg az e-mail címét --}}
+                                <p class="text-gray-500 text-xs mt-1">
+                                    Email cím: {{ $targetUser->email }}
+                                </p>
+                                <p class="text-gray-500 text-xs mt-1">
+                                    Vezetéknév: {{ $targetUser->last_name }}
+                                </p>
+                                <p class="text-gray-500 text-xs mt-1">
+                                    Keresztnév: {{ $targetUser->first_name }}
+                                </p>
+                            @else
+                                {{-- Ha nem talált felhasználót az ID alapján --}}
+                                <p class="text-gray-500 text-xs mt-1">
+                                    Email: {{ $scanner->email }} (Nincs User ID: {{ $scanner->id }} )
+                                </p>
+                            @endif
                         </div>
+                    </div>
 
                         <form method="POST" action="{{ route('partner.scanner.destroy', $scanner) }}">
                             @csrf
@@ -112,29 +141,51 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const ctx = document.getElementById('dailyScansChart').getContext('2d');
-    const chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: {!! json_encode($dailyScans->pluck('date')) !!},
-            datasets: [{
-                label: 'Beolvasások száma',
-                data: {!! json_encode($dailyScans->pluck('total')) !!},
-                borderColor: '#4F46E5',
-                backgroundColor: 'rgba(79,70,229,0.2)',
-                tension: 0.3,
-                fill: true
-            }]
-        },
-        options: {
-            scales: {
-                y: { beginAtZero: true },
-                x: { ticks: { color: '#ccc' } }
+const ctx = document.getElementById('dailyScansChart').getContext('2d');
+
+const labels = {!! json_encode($dailyScans->pluck('date')) !!};
+const data = {!! json_encode($dailyScans->pluck('total')) !!};
+
+const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Beolvasások száma',
+            data: data,
+            borderColor: '#4F46E5',
+            backgroundColor: 'rgba(79,70,229,0.2)',
+            tension: 0.3,
+            fill: true,
+            pointRadius: 5,
+            pointHoverRadius: 7
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1, // egész számok
+                    color: '#ccc'
+                }
             },
-            plugins: {
-                legend: { labels: { color: '#fff' } }
+            x: { ticks: { color: '#ccc' } }
+        },
+        plugins: {
+            legend: { labels: { color: '#fff' } },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.parsed.y + ' beolvasás';
+                    }
+                }
             }
         }
-    });
+    }
+});
+
+
 </script>
 @endsection
