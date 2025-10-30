@@ -1,8 +1,8 @@
 <p align="center">
-    <img src="{{ asset('images/logo.png') }}" width="300" alt="RoamPass Logó">
+    <img src="public/images/logo.png" width="300" alt="RoamPass Logó">
 </p>
 
-<h1 align="center">✨ RoamPass - Konditerem Beléptető Rendszer</h1>
+<h1 align="center">✨ RoamPass - Országos Fitnesz Beléptető Hálózat</h1>
 
 <p align="center">
 <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
@@ -12,12 +12,12 @@
 
 ## 🚀 A Projektről
 
-A **RoamPass** egy modern, **Laravel** alapú webalkalmazás, amelyet kifejezetten konditermek és fitneszközpontok beléptetésének és jegykezelésének digitális kezelésére fejlesztettek ki. Célja a beléptetési folyamat gyorsítása és automatizálása, miközben biztonságosan kezeli a felhasználói adatokat és a bérleteket.
+A **RoamPass** egy modern, **Laravel** alapú webalkalmazás, amely **forradalmasítja a diákok konditermi belépését** azáltal, hogy egyetlen bérletet biztosít egy országos fitnesz hálózathoz. Célja a beléptetési folyamat gyorsítása és automatizálása, miközben biztonságosan kezeli a felhasználói adatokat és a bérleteket.
 
 ### Fő Funkciók
 
 * **QR-kódos Azonosítás:** Gyors beolvasás a dedikált scanner felületen.
-* **Alkalomlevonás:** Valós idejű bérlet- és alkalomszám-kezelés.
+* **Alkalomlevonás:** Valós idejű bérlet- és alkalomszám-kezelés a partner konditermekben.
 * **Dokumentumkezelés:** Diákigazolványok biztonságos feltöltése és jóváhagyása.
 * **Adminisztrációs Felület:** Felhasználók, jegyek és bevételek központi menedzselése.
 * **Konditermi Adminisztrációs Felület:** Saját kezelőpanel a konditerem tulajdonosoknak (bevétel megtekintése, saját alkalmazottak kezelése)
