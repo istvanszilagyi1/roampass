@@ -1,3 +1,106 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 🧭 Navbar linkek */
+.nav-link {
+    @apply text-gray-300 font-medium px-4 py-2
+    bg-transparent /* Teljesen áttetsző alap */
+    border-b-2 border-gray-800 /* Nagyon sötét, finom alsó vonal */
+    hover:text-gray-100
+    hover:border-indigo-500 /* Az alsó vonal intenzív színt kap hoverre */
+    transition-all duration-200 ease-in-out;
+}
+
+/* 💫 Aktív oldal kiemelése (Vastag vonalas jelzés) */
+.nav-link.active {
+    @apply text-indigo-400
+    border-b-4 border-indigo-500 /* Vastag, jelző vonal */
+    bg-gray-900/50 /* Nagyon enyhe sötét háttér */
+    font-bold
+    shadow-none;
+}
+
+/* 📱 Mobilmenü linkek (Hasonló diszkrét stílus) */
+.mobile-link {
+    @apply text-gray-300 font-semibold px-5 py-3 rounded-lg
+    bg-gray-800/80 /* Erősebb háttér mobilon */
+    hover:bg-gray-700 hover:text-gray-100
+    transition-all duration-300;
+}
+
+/* 💜 Bejelentkezés gomb (Fő CTA - Sötétebb, komolyabb indigó) */
+.nav-btn-primary {
+    @apply bg-indigo-700 text-white font-semibold px-5 py-2
+    rounded-lg shadow-xl shadow-indigo-800/40 /* Sötétebb, mélyebb árnyék */
+    hover:bg-indigo-800 hover:shadow-2xl hover:scale-[1.02]
+    transition-all duration-300;
+}
+
+/* 💠 Regisztráció gomb (Másodlagos CTA - Szürke, színtelen) */
+.nav-btn-secondary {
+    @apply border border-gray-600 text-gray-400 font-semibold px-5 py-2
+    rounded-lg bg-transparent hover:bg-gray-800 hover:text-white
+    hover:shadow-md hover:scale-[1.02]
+    transition-all duration-300;
+}
+
+/* 🚪 Kijelentkezés */
+.nav-btn-logout {
+    @apply text-red-400 font-semibold px-4 py-2 rounded-lg
+    bg-gray-800/60 backdrop-blur-md border border-gray-700 shadow-sm
+    hover:bg-red-700 hover:text-white hover:shadow-md transition-all duration-300;
+}
+
+nav a, nav button {
+    @apply flex items-center justify-center min-w-[120px] text-center;
+}
+
+/* ✨ Smooth fade-in */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+body.content-visible main {
+    animation: fadeIn 0.7s ease-in-out;
+}
+
+/* Finom "belégzés" animáció */
+@keyframes floatCard {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
+/* Belépő animáció lapbetöltéskor */
+.gym-card {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hover animáció */
+.gym-card:hover {
+  animation: floatCard 3s ease-in-out infinite;
+  box-shadow: 0 0 28px rgba(0, 132, 255, 0.18); /* kék ambient fény */
+}
+
+*[class*="backdrop"] {
+    pointer-events: auto !important;
+}
+
+html, body {
+    overflow-x: hidden;
+}
+
+
+
+

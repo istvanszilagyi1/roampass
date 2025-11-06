@@ -1,6 +1,6 @@
 <x-guest-layout>
-    <div class="min-h-screen flex items-center justify-center bg-gray-950 text-white px-6">
-        <div class="bg-gray-900/60 backdrop-blur-md p-8 rounded-2xl shadow-xl w-full max-w-2xl">
+    <div class="min-h-screen flex items-center justify-center bg-gray-950 text-white px-6 relative z-0">
+        <div class="bg-gray-900/60 backdrop-fix p-8 rounded-2xl shadow-xl w-full max-w-2xl relative z-50 pointer-events-auto">
             <div class="text-center mb-8">
                 <img src="{{ asset('images/logo.png') }}" alt="RoamPass" class="mx-auto h-16 mb-3">
                 <h1 class="text-3xl font-bold text-blue-400">Regisztráció</h1>
@@ -49,18 +49,6 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-gray-300 mb-2">Iskola típusa</label>
-                    <select name="student_type" class="w-full bg-gray-800 border-gray-700 text-white p-3 rounded-lg">
-                        <option value="iskolai" {{ old('student_type') == 'iskolai' ? 'selected' : '' }}>Középiskola</option>
-                        <option value="egyetemi" {{ old('student_type') == 'egyetemi' ? 'selected' : '' }}>Egyetem</option>
-                    </select>
-                    @error('student_type')
-                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                {{-- Gomb + login link --}}
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6">
                     <a href="{{ route('login') }}"
                        class="text-sm text-gray-400 hover:text-gray-200 underline order-2 sm:order-1">

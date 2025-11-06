@@ -1,13 +1,12 @@
 <x-guest-layout>
     <div class="min-h-screen flex items-center justify-center bg-gray-950 text-white px-6">
-        <div class="bg-gray-900/60 backdrop-blur-md p-8 rounded-2xl shadow-xl w-full max-w-xl">
+        <div class="bg-gray-900 p-8 rounded-2xl shadow-xl w-full max-w-md">
             <div class="text-center mb-8">
                 <img src="{{ asset('images/logo.png') }}" alt="RoamPass" class="mx-auto h-16 mb-3">
                 <h1 class="text-3xl font-bold text-blue-400">Bejelentkezés</h1>
                 <p class="text-gray-400 text-sm mt-1">Üdv újra a RoamPass világában 🌍</p>
             </div>
 
-            <!-- Session Status -->
             <x-auth-session-status class="mb-4" :status="session('status')" />
 
             <form method="POST" action="{{ route('login') }}" class="space-y-6">
@@ -16,7 +15,7 @@
                 <div>
                     <x-input-label for="email" :value="__('Email cím')" />
                     <x-text-input id="email"
-                        class="block mt-1 w-full bg-gray-800 border-gray-700 text-white"
+                        class="block mt-1 w-full bg-gray-800 border border-gray-700 text-white rounded-md p-2"
                         type="email" name="email"
                         :value="old('email')" required autofocus autocomplete="username" />
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
@@ -25,13 +24,12 @@
                 <div>
                     <x-input-label for="password" :value="__('Jelszó')" />
                     <x-text-input id="password"
-                        class="block mt-1 w-full bg-gray-800 border-gray-700 text-white"
+                        class="block mt-1 w-full bg-gray-800 border border-gray-700 text-white rounded-md p-2"
                         type="password" name="password"
                         required autocomplete="current-password" />
                     <x-input-error :messages="$errors->get('password')" class="mt-2" />
                 </div>
 
-                <!-- Remember me -->
                 <div class="flex items-center justify-between text-sm text-gray-400">
                     <label for="remember_me" class="inline-flex items-center">
                         <input id="remember_me" type="checkbox"
@@ -53,9 +51,10 @@
                         Nincs még fiókod?
                     </a>
 
-                    <x-primary-button class="w-full sm:w-auto order-1 sm:order-2">
-                        {{ __('Bejelentkezem') }}
-                    </x-primary-button>
+                    <button type="submit"
+                        class="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-3 rounded-full order-1 sm:order-2 transition">
+                        Bejelentkezem
+                    </button>
                 </div>
             </form>
         </div>

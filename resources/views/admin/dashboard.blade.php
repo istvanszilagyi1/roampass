@@ -80,6 +80,18 @@
                                 </button>
                             @endif
                         </td>
+                        <td class="px-4 py-2">
+                            @if($user->ocr_status == 'high')
+                                <span class="text-green-400 font-semibold">✅ Hologram ellenőrzés OK ({{ $user->ocr_confidence }}%)</span>
+                            @elseif($user->ocr_status == 'medium')
+                                <span class="text-yellow-400 font-semibold">⚠️ Ellenőrzés közepes ({{ $user->ocr_confidence }}%)</span>
+                            @elseif($user->ocr_status == 'fail')
+                                <span class="text-red-400 font-semibold">❌ Ellenőrzés sikertelen ({{ $user->ocr_confidence }}%)</span>
+                            @else
+                                <span class="text-gray-400">Feldolgozás alatt...</span>
+                            @endif
+                        </td>
+
                         <td class="px-4 py-2 space-x-2">
                             @if($user->gymPasses->first())
                             <form method="POST" action="{{ route('admin.updatePass', $user) }}" class="inline">

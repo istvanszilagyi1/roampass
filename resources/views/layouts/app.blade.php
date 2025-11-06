@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <title>@yield('title', 'RoamPass')</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <script>
         // 🌫 Görgetésre a navbar háttér és árnyék aktiválása
@@ -57,66 +58,120 @@
 
     <!-- 🌈 NAVBAR -->
     <header class="fixed top-0 left-0 w-full z-50 transition-all duration-500 bg-transparent backdrop-blur-xl">
-        <div class="container mx-auto flex justify-between items-center h-16 px-6">
-            <a href="{{ route('home') }}" class="flex items-center space-x-2 group">
-                <img src="{{ asset('images/logo.png') }}" alt="Roam Logo" class="h-10 w-auto transition-transform group-hover:scale-105">
-                <span class="text-xl font-bold text-white tracking-tight group-hover:text-indigo-400 transition-colors">RoamPass</span>
-            </a>
+    <div class="container mx-auto flex justify-between items-center h-16 px-6">
+        <a href="{{ route('home') }}" class="flex items-center space-x-2 group">
+            <img src="{{ asset('images/logo.png') }}" alt="Roam Logo"
+                class="h-10 w-auto transition-transform group-hover:scale-105">
+            <span class="text-xl font-bold text-white tracking-tight group-hover:text-indigo-400 transition-colors">RoamPass</span>
+        </a>
 
-            <!-- Hamburger (mobil) -->
-            <button id="menu-btn" class="lg:hidden text-white text-3xl focus:outline-none">
-                ☰
-            </button>
+        <!-- Hamburger (mobil) -->
+        <button id="menu-btn" class="lg:hidden text-white text-3xl focus:outline-none hover:text-indigo-400 transition-colors">
+            ☰
+        </button>
 
-            <!-- 🧭 NAVIGÁCIÓ -->
-            <nav id="nav-menu" class="flex items-center space-x-4">
+        <!-- 🧭 NAVIGÁCIÓ -->
+        <nav id="nav-menu" class="hidden lg:flex items-center space-x-3">
+            <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">Főoldal</a>
+            <a href="{{ route('partners.index') }}" class="nav-link {{ request()->routeIs('partners.index') ? 'active' : '' }}">Partnereink</a>
+
+            @auth
+                @php
+                    // Megnézzük, hogy a felhasználó admin vagy scanner-e.
+                    // Ezek a szerepek elrejtik a standard felhasználói funkciókat.
+                    $isSpecialRole = Auth::user()->is_admin ?? false;
+                    // JAVÍTVA: A scanner jogosultság ellenőrzése a scannerProfile relációval történik.
+                    $isSpecialRole = $isSpecialRole || (Auth::user()?->scannerProfile);
+                    $isPartner = \App\Models\Gym::where('owner_id', Auth::id())->first();
+                @endphp
+
+                {{-- ADMIN PANEL (csak adminoknak látható) --}}
                 @if(Auth::user() && Auth::user()->is_admin)
-                    <a href="{{ route('admin.dashboard') }}" class="nav-link">Admin Panel</a>
+                    <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Admin Panel</a>
                 @endif
-                @auth
-                    @if(Auth::user()?->scannerProfile)
-                        <a href="{{ route('scanner.dashboard') }}" class="nav-link">
-                            Scanner Dashboard
-                        </a>
-                    @endif
-                @endauth
-                <a href="{{ route('home') }}" class="nav-link">Főoldal</a>
-                <a href="{{ route('partners.index') }}" class="nav-link">Partnereink</a>
 
-                @auth
-                    <a href="{{ route('passes.index') }}" class="nav-link">Saját bérleteim</a>
-                    <a href="{{ route('passes.create') }}" class="nav-link">Bérlet vásárlás</a>
-                    <a href="{{ route('profile.edit') }}" class="nav-link">Profilom</a>
+                {{-- SCANNER DASHBOARD (csak scannereknek látható) --}}
+                @if(Auth::user()?->scannerProfile)
+                    <a href="{{ route('scanner.dashboard') }}" class="nav-link {{ request()->routeIs('scanner.dashboard') ? 'active' : '' }}">Scanner Dashboard</a>
+                @endif
 
-                    @php
-                        // Ellenőrizzük, hogy van-e hozzárendelt gym
-                        $ownedGym = \App\Models\Gym::where('owner_id', Auth::id())->first();
-                    @endphp
+                {{-- STANDARD USER LINKS (elrejtve adminok és scannerek elől) --}}
+                @unless($isSpecialRole)
+                    <a href="{{ route('passes.index') }}" class="nav-link {{ request()->routeIs('passes.index') ? 'active' : '' }}">Saját bérleteim</a>
+                    <a href="{{ route('passes.create') }}" class="nav-link {{ request()->routeIs('passes.create') ? 'active' : '' }}">Bérlet vásárlás</a>
+                @endunless
 
-                    @if($ownedGym)
-                        <a href="{{ route('partner.dashboard') }}" class="nav-link">Partner Dashboard</a>
-                    @endif
+                {{-- PROFILE LINK (minden bejelentkezett felhasználónak látható) --}}
+                <a href="{{ route('profile.edit') }}" class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}">Profilom</a>
 
-                    <form method="POST" action="{{ route('logout') }}" class="inline">
-                        @csrf
-                        <button type="submit" class="nav-btn-logout">Kijelentkezés</button>
-                    </form>
-                @else
-                    <a href="{{ route('login') }}" class="nav-btn-primary">Bejelentkezés</a>
-                    <a href="{{ route('register') }}" class="nav-btn-secondary">Regisztráció</a>
-                @endauth
+                {{-- PARTNER DASHBOARD (csak a konditerem tulajdonosoknak látható) --}}
+                @if($isPartner)
+                    <a href="{{ route('partner.dashboard') }}" class="nav-link {{ request()->routeIs('partner.dashboard') ? 'active' : '' }}">Partner Dashboard</a>
+                @endif
 
-            </nav>
-        </div>
-        <div id="mobile-menu" class="hidden flex-col items-center bg-gray-900/95 backdrop-blur-lg shadow-lg py-4 space-y-3 text-center lg:hidden">
-            <a href="{{ route('home') }}" class="nav-link">Főoldal</a>
-            <a href="{{ route('partners.index') }}" class="nav-link">Partnereink</a>
-            @guest
-                <a href="{{ route('login') }}" class="nav-btn-primary w-4/5">Bejelentkezés</a>
-                <a href="{{ route('register') }}" class="nav-btn-secondary w-4/5">Regisztráció</a>
-            @endguest
-        </div>
+                <form method="POST" action="{{ route('logout') }}" class="inline">
+                    @csrf
+                    <button type="submit" class="nav-btn-logout">Kijelentkezés</button>
+                </form>
+            @else
+                <a href="{{ route('login') }}" class="nav-btn-primary">Bejelentkezés</a>
+                <a href="{{ route('register') }}" class="nav-btn-secondary">Regisztráció</a>
+            @endauth
+        </nav>
+    </div>
+
+    <!-- 📱 Mobilmenü -->
+    <div id="mobile-menu" class="hidden flex-col items-center bg-gray-900/95 backdrop-blur-xl shadow-xl py-6 space-y-4 text-center lg:hidden transition-all duration-500">
+        <a href="{{ route('home') }}" class="mobile-link">Főoldal</a>
+        <a href="{{ route('partners.index') }}" class="mobile-link">Partnereink</a>
+
+        @guest
+            <a href="{{ route('login') }}" class="nav-btn-primary w-4/5">Bejelentkezés</a>
+            <a href="{{ route('register') }}" class="nav-btn-secondary w-4/5">Regisztráció</a>
+        @else
+            {{-- Mivel a mobilmenü is az @auth blokkon belül van, újra el kell végezni a jogosultság ellenőrzést --}}
+            @php
+                $isSpecialRole = Auth::user()->is_admin ?? false;
+                // JAVÍTVA: A scanner jogosultság ellenőrzése a scannerProfile relációval történik.
+                $isSpecialRole = $isSpecialRole || (Auth::user()?->scannerProfile);
+                $isPartner = \App\Models\Gym::where('owner_id', Auth::id())->first();
+            @endphp
+
+            @if(Auth::user() && Auth::user()->is_admin)
+                 <a href="{{ route('admin.dashboard') }}" class="mobile-link">Admin Panel</a>
+            @endif
+
+            @if(Auth::user()?->scannerProfile)
+                 <a href="{{ route('scanner.dashboard') }}" class="mobile-link">Scanner Dashboard</a>
+            @endif
+
+            @unless($isSpecialRole)
+                <a href="{{ route('passes.index') }}" class="mobile-link">Saját bérleteim</a>
+                <a href="{{ route('passes.create') }}" class="mobile-link">Bérlet vásárlás</a>
+            @endunless
+
+            <a href="{{ route('profile.edit') }}" class="mobile-link">Profilom</a>
+
+            @if($isPartner)
+                <a href="{{ route('partner.dashboard') }}" class="mobile-link">Partner Dashboard</a>
+            @endif
+
+            <form method="POST" action="{{ route('logout') }}" class="inline">
+                @csrf
+                <button type="submit" class="nav-btn-logout w-4/5">Kijelentkezés</button>
+            </form>
+        @endauth
+    </div>
+        <script>
+            // Mobilmenü megnyitása / zárása
+            document.getElementById('menu-btn').addEventListener('click', () => {
+                const menu = document.getElementById('mobile-menu');
+                menu.classList.toggle('hidden');
+                menu.classList.toggle('flex');
+            });
+        </script>
     </header>
+
 
     <!-- 📄 CONTENT -->
     <main class="pt-24 container mx-auto px-4 relative z-10">
@@ -128,66 +183,6 @@
         &copy; {{ date('Y') }} RoamPass. Minden jog fenntartva.
     </footer>
 
-    <!-- ✨ TAILWIND STÍLUSOK -->
-    <style>
-        /* 🧭 Navbar linkek */
-       .nav-link {
-            @apply text-gray-200 font-semibold px-4 py-2 rounded-full bg-gray-800/70 backdrop-blur-sm shadow-sm
-            hover:shadow-lg border border-gray-700
-            hover:bg-indigo-600/80
-            hover:text-white transition-all duration-300;
-        }
-        .nav-link::after {
-            content: "";
-            display: block;
-            height: 2px;
-            width: 0%;
-            background: linear-gradient(to right, #6366f1, #9333ea);
-            transition: width 0.3s ease-in-out;
-            margin: 0 auto;
-            border-radius: 2px;
-        }
-        .nav-link:hover::after {
-            width: 60%;
-        }
-
-        /* 💜 Bejelentkezés gomb */
-        .nav-btn-primary {
-            @apply bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold px-5 py-2
-            rounded-full shadow-md hover:shadow-xl hover:scale-105 hover:brightness-110
-            transition-all duration-300;
-        }
-
-        /* 💠 Regisztráció gomb */
-        .nav-btn-secondary {
-            @apply border-2 border-indigo-500 text-indigo-300 font-semibold px-5 py-2 rounded-full
-            bg-transparent hover:bg-indigo-600 hover:text-white hover:shadow-xl hover:scale-105
-            transition-all duration-300;
-        }
-
-        /* 🚪 Kijelentkezés */
-        .nav-btn-logout {
-            @apply text-red-400 font-semibold px-4 py-2 rounded-full bg-gray-800/70 backdrop-blur-sm
-            shadow-sm hover:bg-red-600/70 hover:text-white hover:shadow-md transition-all duration-300;
-        }
-
-        /* ✨ Navbar spacing */
-        nav a, nav button {
-            @apply flex items-center justify-center min-w-[130px] text-center;
-        }
-        nav {
-            @apply flex items-center space-x-3;
-        }
-
-        /* 🌌 Smooth fade-in animáció */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        body.content-visible main {
-            animation: fadeIn 0.7s ease-in-out;
-        }
-    </style>
 
 </body>
 </html>

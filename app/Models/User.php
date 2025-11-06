@@ -28,7 +28,6 @@ class User extends Authenticatable
         'student_id_expiry',
         'student_card_front',
         'student_card_back',
-        'student_type',
         'role',
     ];
 

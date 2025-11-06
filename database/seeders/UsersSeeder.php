@@ -20,7 +20,6 @@ class UsersSeeder extends Seeder
             'email' => 'u@u.hu',
             'password' => Hash::make('password123'),
             'is_admin' => false,
-            'student_type' => 'Egyetem',
         ]);
 
         User::create([
@@ -29,7 +28,6 @@ class UsersSeeder extends Seeder
             'email' => 'a@a.hu',
             'password' => Hash::make('password123'),
             'is_admin' => true,
-            'student_type' => 'Egyetem',
         ]);
     }
 }

@@ -36,12 +36,14 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function() {
     Route::get('/', [AdminpanelController::class, 'index'])->name('admin.dashboard');
     Route::get('/users', [AdminpanelController::class, 'users'])->name('admin.users');
     Route::get('/gyms', [AdminpanelController::class, 'gyms'])->name('admin.gyms');
+    Route::delete('/gyms/{gym}', [AdminpanelController::class, 'deleteGym'])->name('admin.deleteGym');
     Route::post('/gym/store', [AdminpanelController::class, 'storeGym'])->name('admin.storeGym');
     Route::post('/user/{user}/update-pass', [AdminpanelController::class, 'updatePass'])->name('admin.updatePass');
     Route::delete('/user/{user}', [AdminpanelController::class, 'deleteUser'])->name('admin.deleteUser');
     Route::get('/student-ids', [AdminpanelController::class, 'studentIds'])->name('admin.studentIds');
     Route::post('/user/{user}/verify-student', [AdminpanelController::class, 'verifyStudent'])->name('admin.verifyStudent');
     Route::post('/admin/gyms/{gym}/assign-owner', [AdminPanelController::class, 'assignOwner'])->name('admin.gyms.assignOwner');
+    Route::get('/admin/users/search', [AdminpanelController::class, 'searchUsers'])->name('admin.users.search');
 });
 
 Route::middleware(['auth', 'scanner'])->group(function () {

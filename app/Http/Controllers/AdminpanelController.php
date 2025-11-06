@@ -90,14 +90,16 @@ class AdminpanelController extends Controller
 
     public function studentIds()
     {
-        // Csak azok a felhasználók, akik feltöltötték mindkét oldalt, de még nincs elfogadva
-        $users = User::where('student_card_front', '!=', null)
-                    ->where('student_card_back', '!=', null)
-                    ->where('student_id_verified', false)
-                    ->get();
+        // Csak a manuális ellenőrzésre váró felhasználók
+        $users = User::whereNotNull('student_card_front')
+            ->whereNotNull('student_card_back')
+            ->where('student_id_verified', false)
+            ->get();
 
         return view('admin.student_ids', compact('users'));
     }
+
+
 
     public function assignOwner(Request $request, Gym $gym)
     {
