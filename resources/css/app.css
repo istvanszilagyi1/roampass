@@ -2,42 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 🧭 Navbar linkek */
+
 .nav-link {
     @apply text-gray-300 font-medium px-4 py-2
-    bg-transparent /* Teljesen áttetsző alap */
-    border-b-2 border-gray-800 /* Nagyon sötét, finom alsó vonal */
+    bg-transparent
+    border-b-2 border-gray-800
     hover:text-gray-100
-    hover:border-indigo-500 /* Az alsó vonal intenzív színt kap hoverre */
+    hover:border-indigo-500
     transition-all duration-200 ease-in-out;
 }
 
-/* 💫 Aktív oldal kiemelése (Vastag vonalas jelzés) */
 .nav-link.active {
     @apply text-indigo-400
-    border-b-4 border-indigo-500 /* Vastag, jelző vonal */
-    bg-gray-900/50 /* Nagyon enyhe sötét háttér */
+    border-b-4 border-indigo-500
+    pb-[calc(0.5rem-2px)]
+    bg-gray-900/50
     font-bold
     shadow-none;
 }
 
-/* 📱 Mobilmenü linkek (Hasonló diszkrét stílus) */
 .mobile-link {
     @apply text-gray-300 font-semibold px-5 py-3 rounded-lg
-    bg-gray-800/80 /* Erősebb háttér mobilon */
+    bg-gray-800/80
     hover:bg-gray-700 hover:text-gray-100
     transition-all duration-300;
 }
 
-/* 💜 Bejelentkezés gomb (Fő CTA - Sötétebb, komolyabb indigó) */
 .nav-btn-primary {
     @apply bg-indigo-700 text-white font-semibold px-5 py-2
-    rounded-lg shadow-xl shadow-indigo-800/40 /* Sötétebb, mélyebb árnyék */
+    rounded-lg shadow-xl shadow-indigo-800/40
     hover:bg-indigo-800 hover:shadow-2xl hover:scale-[1.02]
     transition-all duration-300;
 }
 
-/* 💠 Regisztráció gomb (Másodlagos CTA - Szürke, színtelen) */
 .nav-btn-secondary {
     @apply border border-gray-600 text-gray-400 font-semibold px-5 py-2
     rounded-lg bg-transparent hover:bg-gray-800 hover:text-white
@@ -45,7 +42,7 @@
     transition-all duration-300;
 }
 
-/* 🚪 Kijelentkezés */
+
 .nav-btn-logout {
     @apply text-red-400 font-semibold px-4 py-2 rounded-lg
     bg-gray-800/60 backdrop-blur-md border border-gray-700 shadow-sm
@@ -56,7 +53,17 @@ nav a, nav button {
     @apply flex items-center justify-center min-w-[120px] text-center;
 }
 
-/* ✨ Smooth fade-in */
+@media (max-width: 768px) {
+    nav a, nav button {
+        @apply min-w-0 w-full;
+    }
+
+    .nav-btn-logout {
+        @apply w-full;
+    }
+}
+
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -66,31 +73,28 @@ body.content-visible main {
     animation: fadeIn 0.7s ease-in-out;
 }
 
-/* Finom "belégzés" animáció */
 @keyframes floatCard {
-  0%   { transform: translateY(0); }
-  50%  { transform: translateY(-4px); }
-  100% { transform: translateY(0); }
+    0%   { transform: translateY(0); }
+    50%  { transform: translateY(-4px); }
+    100% { transform: translateY(0); }
 }
 
-/* Belépő animáció lapbetöltéskor */
 .gym-card {
-  opacity: 0;
-  transform: translateY(12px);
-  animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fadeInUp 0.5s ease forwards;
 }
 
 @keyframes fadeInUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-/* Hover animáció */
 .gym-card:hover {
-  animation: floatCard 3s ease-in-out infinite;
-  box-shadow: 0 0 28px rgba(0, 132, 255, 0.18); /* kék ambient fény */
+    animation: floatCard 3s ease-in-out infinite;
+    box-shadow: 0 0 28px rgba(0, 132, 255, 0.18);
 }
 
 *[class*="backdrop"] {
@@ -102,5 +106,39 @@ html, body {
 }
 
 
+.select2-container--classic .select2-selection--single {
+    background-color: #1f2937 !important;
+    border: 1px solid #374151 !important;
+    height: 2.5rem;
+    line-height: 2.5rem;
+}
 
+.select2-container--classic .select2-selection--single .select2-selection__rendered {
+    color: #f9fafb !important;
+}
 
+.select2-container--classic .select2-selection__placeholder {
+    color: #9ca3af !important;
+}
+
+.select2-container--classic .select2-results {
+    background-color: #1f2937;
+}
+.select2-container--classic .select2-results__option {
+    color: #f9fafb;
+    background-color: #1f2937;
+}
+.select2-container--classic .select2-results__option--highlighted {
+    background-color: #374151 !important;
+    color: #f9fafb;
+}
+
+.select2-container--classic .select2-search__field {
+    background-color: #111827 !important;
+    color: #f9fafb !important;
+    border: 1px solid #374151 !important;
+}
+
+.select2-container--classic .select2-selection--single .select2-selection__arrow b {
+    border-color: #9ca3af transparent transparent transparent !important;
+}

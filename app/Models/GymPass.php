@@ -3,10 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class GymPass extends Model
 {
-    protected $fillable = ['user_id', 'remaining_uses', 'purchase_date', 'qr_code_url'];
+    use SoftDeletes;
+    protected $fillable = ['user_id', 'remaining_uses', 'purchase_date', 'expires_at', 'qr_code_url', 'qr_token'];
+
+    protected $casts = [
+        'purchase_date' => 'datetime',
+        'expires_at' => 'datetime',
+    ];
 
     public function user()
     {

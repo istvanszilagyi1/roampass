@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\ActionLog;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,7 +42,13 @@ class RegisteredUserController extends Controller
             'last_name' => $request->last_name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'wants_newsletter' => isset($request->wants_newsletter),
+            'privacy_policy_accepted_at' => now(),
         ]);
+        ActionLog::log(
+            'PRIVACY_POLICY_ACCEPTED',
+            "Új felhasználó adatkezelési elfogadás: {$user->first_name} {$user->last_name}, email: {$user->email}"
+        );
 
         event(new Registered($user));
 

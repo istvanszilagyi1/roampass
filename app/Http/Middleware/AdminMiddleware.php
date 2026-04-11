@@ -20,8 +20,6 @@ class AdminMiddleware
         if (!Auth::check() || !Auth::user()->is_admin) {
             // Ha nem admin, visszadob a home-ra vagy 403
             return redirect('/')->with('error', 'Nincs jogosultságod az oldal megtekintéséhez.');
-            // Vagy használhatod:
-            // abort(403, 'Nincs jogosultságod.');
         }
 
         // Ha admin, engedélyezve a kérés

@@ -16,7 +16,6 @@ class ExpireStudentCards extends Command
         $today = Carbon::today();
         $monthDay = $today->format('m-d');
 
-        // Október 31 minden típusnál
         if ($monthDay === '10-31') {
             $users = User::where('student_id_verified', true)->get();
             foreach ($users as $user) {
@@ -30,7 +29,6 @@ class ExpireStudentCards extends Command
             $this->info('Október 31-i diákigazolvány törlés lefutott.');
         }
 
-        // Március 31 csak "egyetemi" típusnál
         if ($monthDay === '03-31') {
             $users = User::where('student_id_verified', true)
                          ->where('student_type', 'Egyetem')

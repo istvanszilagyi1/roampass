@@ -3,97 +3,88 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_profile_page_is_displayed(): void
+    private function createStudent($verified = true)
     {
-        $user = User::factory()->create();
-
-        $response = $this
-            ->actingAs($user)
-            ->get('/profile');
-
-        $response->assertOk();
+        return User::create([
+            'first_name' => 'Teszt',
+            'last_name' => 'Diák',
+            'email' => 'diak' . uniqid() . '@test.hu',
+            'password' => bcrypt('password'),
+            'role' => 'student',
+            'student_id_number' => '1111111111',
+            'student_id_verified' => $verified,
+            'ocr_status' => $verified ? 'high' : 'pending'
+        ]);
     }
 
-    public function test_profile_information_can_be_updated(): void
+    public function test_profil_adatok_frissitese_diakszam_valtoztatassal()
     {
-        $user = User::factory()->create();
+        Setting::updateOrCreate(['key' => 'student_id_upload_required'], ['value' => '1']);
+        
+        Http::fake();
 
-        $response = $this
-            ->actingAs($user)
-            ->patch('/profile', [
-                'name' => 'Test User',
-                'email' => 'test@example.com',
-            ]);
+        $user = $this->createStudent(true);
 
-        $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
+        $response = $this->actingAs($user)->post(route('profile.update'), [
+            'student_id_number' => '2222222222'
+        ]);
 
         $user->refresh();
-
-        $this->assertSame('Test User', $user->name);
-        $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
+        
+        $this->assertEquals(0, (int)$user->student_id_verified);
+        $this->assertEquals('pending', $user->ocr_status);
     }
 
-    public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
+    public function test_ocr_folyamat_szimulacio_sikeres_azonositasnal()
     {
-        $user = User::factory()->create();
+        Storage::fake('public');
+        Http::fake([
+            '*' => Http::response(['is_valid' => true, 'confidence' => 99], 200)
+        ]);
 
-        $response = $this
-            ->actingAs($user)
-            ->patch('/profile', [
-                'name' => 'Test User',
-                'email' => $user->email,
-            ]);
+        Setting::updateOrCreate(['key' => 'student_id_upload_required'], ['value' => '1']);
+        
+        $user = $this->createStudent(false);
 
-        $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
+        $response = $this->actingAs($user)->post(route('profile.update'), [
+            'student_id_number' => '1234567890',
+            'student_card_front' => UploadedFile::fake()->image('front.jpg'),
+            'student_card_back' => UploadedFile::fake()->image('back.jpg'),
+        ]);
 
-        $this->assertNotNull($user->refresh()->email_verified_at);
+        $user->refresh();
+        $this->assertEquals(1, (int)$user->student_id_verified);
     }
 
-    public function test_user_can_delete_their_account(): void
+    public function test_ocr_folyamat_szimulacio_sikertelen_azonositasnal()
     {
-        $user = User::factory()->create();
+        Http::fake([
+            '*' => Http::response(['is_valid' => false], 200)
+        ]);
 
-        $response = $this
-            ->actingAs($user)
-            ->delete('/profile', [
-                'password' => 'password',
-            ]);
+        Setting::updateOrCreate(['key' => 'student_id_upload_required'], ['value' => '1']);
+        
+        $user = $this->createStudent(false);
 
-        $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/');
+        $response = $this->actingAs($user)->post(route('profile.update'), [
+            'student_id_number' => '1234567890',
+            'student_card_front' => UploadedFile::fake()->image('front.jpg'),
+            'student_card_back' => UploadedFile::fake()->image('back.jpg'),
+        ]);
 
-        $this->assertGuest();
-        $this->assertNull($user->fresh());
-    }
-
-    public function test_correct_password_must_be_provided_to_delete_account(): void
-    {
-        $user = User::factory()->create();
-
-        $response = $this
-            ->actingAs($user)
-            ->from('/profile')
-            ->delete('/profile', [
-                'password' => 'wrong-password',
-            ]);
-
-        $response
-            ->assertSessionHasErrorsIn('userDeletion', 'password')
-            ->assertRedirect('/profile');
-
-        $this->assertNotNull($user->fresh());
+        $user->refresh();
+        $this->assertEquals(0, (int)$user->student_id_verified);
+        $this->assertEquals('fail', $user->ocr_status);
     }
 }

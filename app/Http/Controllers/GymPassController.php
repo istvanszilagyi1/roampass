@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\GymPass;
+use App\Models\ActionLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class GymPassController extends Controller
 {
@@ -19,8 +21,13 @@ class GymPassController extends Controller
 
         // Ellenőrizzük a diákigazolványt
         if (!$user->hasValidStudentCard()) {
+            ActionLog::log(
+                'STUDENT_CARD_INVALID_ACCESS',
+                "Érvénytelen diákigazolvánnyal próbálta elérni a bérleteit: {$user->email}"
+            );
+
             return redirect()->route('profile.edit')
-                ->with('error', '⚠️ A diákigazolványod lejárt vagy még nincs elfogadva. Kérjük, töltsd fel újra!');
+                ->with('error', 'Csak hitelesítés után tekintheted meg bérletedet.');
         }
 
         // Ha van bérlet, de az összes alkalom elfogyott, navigáljunk a vásárlásra
@@ -30,7 +37,6 @@ class GymPassController extends Controller
 
         return view('passes.index', compact('passes'));
     }
-
 
     public function create()
     {
@@ -42,59 +48,73 @@ class GymPassController extends Controller
     {
         $user = Auth::user();
 
-
+        // Validációk
         if (!$user->hasValidStudentCard()) {
+            ActionLog::log(
+                'PASS_PURCHASE_BLOCKED',
+                "Bérlet vásárlás blokkolva – érvénytelen diákigazolvány: {$user->email}"
+            );
+
             return redirect()->route('profile.edit')
-                ->with('error', '❌ Csak érvényes és elfogadott diákigazolvánnyal vásárolhatsz bérletet.');
+                ->with('error', 'Csak hitelesítés után vásárolhatsz bérletet.');
         }
 
-        // Ellenőrizzük, hogy van-e aktív bérlete
+        // Aktív bérlet ellenőrzése
         $activePass = GymPass::where('user_id', $user->id)
-                              ->where('remaining_uses', '>', 0)
-                              ->first();
+                             ->where('remaining_uses', '>', 0)
+                             ->where('expires_at', '>', now())
+                             ->first();
 
         if ($activePass) {
+            ActionLog::log(
+                'PASS_PURCHASE_BLOCKED',
+                "Új bérlet vásárlás blokkolva – már van aktív bérlet: {$user->email}"
+            );
+
             return redirect()->route('passes.index')
-                             ->with('error', 'Már van aktív bérleted, amíg el nem fogy a 12 alkalom, nem vásárolhatsz újat.');
+                ->with('error', 'Már van aktív bérleted. Amíg el nem fogy vagy le nem jár, nem vásárolhatsz újat.');
         }
 
-        if (!$user->student_id_verified || !$user->student_id_expiry) {
-            return back()->with('error', 'Csak érvényes és elfogadott diákigazolvánnyal vásárolhatsz bérletet.');
-        }
+        // Bérlet létrehozása biztonságos tokennel
+        $token = Str::random(32);
 
-
-        // Ha nincs aktív bérlet, létrehozzuk az újat
         $gymPass = GymPass::create([
             'user_id' => $user->id,
             'remaining_uses' => 12,
             'purchase_date' => now(),
-            'qr_code_url' => '', // ideiglenesen üres string
+            'expires_at' => now()->addMonth(),
+            'qr_code_url' => '',
+            'qr_token' => $token,
         ]);
+        
+        ActionLog::log(
+            'PASS_PURCHASE_COMPLETED',
+            "Bérlet vásárlás sikeresen befejezve: user={$user->email}, pass_id={$gymPass->id}"
+        );
 
-        Storage::disk('public')->makeDirectory('qrcodes');
+        return redirect()->route('passes.index')
+            ->with('success', 'Bérlet vásárlás sikeres! A QR kódodat megtalálod a bérletednél.');
+    }
 
-        // QR kód generálása: a QR kód tartalmazza a user_id és pass_id-t
-        $qrContent = $user->id . ':' . $gymPass->id;
-        $qrFileName = 'pass_' . $gymPass->id . '_' . time() . '.png';
-        $qrPath = storage_path('app/public/qrcodes/' . $qrFileName);
-        $qrRelativePath = 'qrcodes/' . $qrFileName;
+    public function renderDynamicQr(GymPass $pass)
+    {
+        if ($pass->user_id !== Auth::id()) {
+            abort(403);
+        }
 
-        // QR kód mentése
+        $time = time(); 
+        
+        $signature = hash_hmac('sha256', $pass->id . '-' . $time, $pass->qr_token);
+
+        $qrData = $pass->id . '|' . $time . '|' . $signature;
+
         $result = Builder::create()
             ->writer(new PngWriter())
-            ->data($qrContent)
+            ->data($qrData)
             ->size(300)
             ->margin(10)
             ->build();
 
-        Storage::disk('public')->put($qrRelativePath, $result->getString());
-
-        // Mentjük a qr_path-ot a bérlethez
-        $gymPass->update([
-            'qr_code_url' => Storage::url($qrRelativePath),
-        ]);
-
-        return redirect()->route('passes.index')
-                        ->with('success', 'Bérlet vásárlás sikeres! A QR kódodat megtalálod a bérletednél.');
+        return response($result->getString())->header('Content-Type', 'image/png');
     }
 }

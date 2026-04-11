@@ -29,22 +29,19 @@ class AuthenticatedSessionController extends Controller
 
         $user = auth()->user();
 
-        // Ha a felhasználó scanner profilhoz tartozik
-        if ($user->scanner) {
-            return redirect()->route('scanner.dashboard');
-        }
-
-        // Ha a felhasználó partner admin és van hozzárendelt gym
-        if ($user->is_admin && $user->gyms()->exists()) {
-            return redirect()->route('partner.dashboard');
-        }
-
-        // Ha admin
         if ($user->is_admin) {
             return redirect()->route('admin.dashboard');
         }
 
-        // Alapértelmezett
+        if ($user->scannerProfile) {
+            return redirect()->route('scanner.dashboard');
+        }
+
+        $isPartner = \App\Models\Gym::where('owner_id', $user->id)->exists();
+        if ($isPartner) {
+            return redirect()->route('partner.dashboard');
+        }
+
         return redirect()->intended(route('home'));
     }
 

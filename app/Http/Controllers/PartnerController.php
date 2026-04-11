@@ -5,14 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Gym;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class PartnerController extends Controller
 {
     public function index()
     {
-        $gyms = Gym::all();
+        $gyms = Gym::with('reviews')->get();
 
-        // Minden gym-hez hozzárakunk egy ->coords metódusban számolt mezőt
         foreach ($gyms as $gym) {
             $gym->coords = $this->getCoordinates($gym->address, $gym->city);
         }
@@ -23,8 +23,6 @@ class PartnerController extends Controller
     public function show($id)
     {
         $gym = Gym::findOrFail($id);
-
-        // Csak show oldalon is számoljuk ki
         $gym->coords = $this->getCoordinates($gym->address, $gym->city);
 
         return view('partners.show', compact('gym'));
@@ -32,19 +30,30 @@ class PartnerController extends Controller
 
     private function getCoordinates($address, $city)
     {
-        $query = urlencode("$address $city Hungary");
+        // Létrehozunk egy egyedi azonosítót a címből (pl. coords_e4d909c290...)
+        $cacheKey = 'coords_' . md5($address . $city);
 
-        $response = Http::withoutVerifying()
-        ->get("https://nominatim.openstreetmap.org/search?format=json&q={$query}&limit=1");
+        // Megkérjük a Cache-t, hogy 30 napig emlékezzen erre az adatra.
+        // Ha már ismeri a címet, visszaadja a memóriából. Ha nem, csak akkor futtatja le az API hívást.
+        return Cache::remember($cacheKey, now()->addDays(30), function () use ($address, $city) {
+            
+            $apiKey = env('OPENCAGE_API_KEY');
+            $query = urlencode("$address $city Hungary");
+            $url = "https://api.opencagedata.com/geocode/v1/json?q={$query}&key={$apiKey}&limit=1&no_annotations=1";
 
-        if ($response->successful() && count($response->json()) > 0) {
-            $data = $response->json()[0];
-            return [
-                'lat' => $data['lat'],
-                'lng' => $data['lon']
-            ];
-        }
+            $response = Http::get($url);
 
-        return null; // Ha nem található
+            if ($response->successful()) {
+                $data = $response->json();
+                if (!empty($data['results'])) {
+                    return [
+                        'lat' => $data['results'][0]['geometry']['lat'],
+                        'lng' => $data['results'][0]['geometry']['lng'],
+                    ];
+                }
+            }
+
+            return null;
+        });
     }
 }
