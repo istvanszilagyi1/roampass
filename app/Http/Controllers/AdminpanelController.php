@@ -59,12 +59,16 @@ class AdminpanelController extends Controller
             }])
             ->get();
 
-        $monthlyNewUsers = User::select(DB::raw('MONTH(created_at) as month'), DB::raw('COUNT(*) as count'))
+        $dbData = User::select(DB::raw('MONTH(created_at) as month'), DB::raw('COUNT(*) as count'))
             ->whereYear('created_at', now()->year)
             ->groupBy('month')
-            ->orderBy('month')
             ->pluck('count', 'month')
             ->all();
+
+        $monthlyNewUsers = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $monthlyNewUsers[] = $dbData[$i] ?? 0;
+        }
 
         $pendingUsers = User::whereNotNull('student_card_front')
             ->whereNotNull('student_card_back')

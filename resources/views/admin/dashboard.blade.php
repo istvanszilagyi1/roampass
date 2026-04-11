@@ -625,6 +625,11 @@
         }
     }
 
+    const rawData = @json(array_values($monthlyNewUsers));
+    const currentMonthIndex = {{ now()->month }} - 1;
+    
+    const chartData = rawData.map((val, index) => index <= currentMonthIndex ? val : null);
+
     const ctx = document.getElementById('usersChart').getContext('2d');
     new Chart(ctx, {
         type: 'line',
@@ -632,15 +637,20 @@
             labels: ['Jan', 'Feb', 'Már', 'Ápr', 'Máj', 'Jún', 'Júl', 'Aug', 'Szep', 'Okt', 'Nov', 'Dec'],
             datasets: [{
                 label: 'Új regisztrációk',
-                data: @json(array_values($monthlyNewUsers)),
+                data: chartData,
                 borderColor: '#6366f1',
                 backgroundColor: 'rgba(99, 102, 241, 0.1)',
                 borderWidth: 3,
                 tension: 0.4,
-                fill: true
+                fill: true,
+                spanGaps: false
             }]
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { legend: { display: false } } 
+        }
     });
 
     function initSelect2() {
